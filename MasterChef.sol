@@ -1077,7 +1077,7 @@ contract BEP20 is Context, IBEP20, Ownable {
 }
 
 // KEGGToken with Governance.
-contract KEGGToken is BEP20("KEGG Token", "KEGG", 30000000000000000000000) {
+contract KEGGToken is BEP20("Quail Egg", "KEGG", 30000000000000000000000) {
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
@@ -1443,8 +1443,8 @@ contract MasterChef is Ownable, ReentrancyGuard {
         .mul(KEGGPerBlock)
         .mul(pool.allocPoint)
         .div(totalAllocPoint);
-        kegg.mint(devaddr, keggReward.div(10));
         kegg.mint(address(this), keggReward);
+        try kegg.mint(devaddr, keggReward.div(10)) { } catch { }
         pool.accKEGGPerShare = pool.accKEGGPerShare.add(
             keggReward.mul(1e12).div(lpSupply)
         );
