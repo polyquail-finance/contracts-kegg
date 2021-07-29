@@ -1408,9 +1408,9 @@ contract MasterChef is Ownable, ReentrancyGuard {
                 block.number
             );
             uint256 keggReward = multiplier
-            .mul(KEGGPerBlock)
-            .mul(pool.allocPoint)
-            .div(totalAllocPoint);
+                .mul(KEGGPerBlock)
+                .mul(pool.allocPoint)
+                .div(totalAllocPoint);
             accKEGGPerShare = accKEGGPerShare.add(
                 keggReward.mul(1e12).div(lpSupply)
             );
@@ -1440,11 +1440,11 @@ contract MasterChef is Ownable, ReentrancyGuard {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 keggReward = multiplier
-        .mul(KEGGPerBlock)
-        .mul(pool.allocPoint)
-        .div(totalAllocPoint);
+            .mul(KEGGPerBlock)
+            .mul(pool.allocPoint)
+            .div(totalAllocPoint);
         kegg.mint(address(this), keggReward);
-        try kegg.mint(devaddr, keggReward.div(10)) { } catch { }
+        try kegg.mint(devaddr, keggReward.div(10)) {} catch {}
         pool.accKEGGPerShare = pool.accKEGGPerShare.add(
             keggReward.mul(1e12).div(lpSupply)
         );
@@ -1492,13 +1492,14 @@ contract MasterChef is Ownable, ReentrancyGuard {
         updatePool(_pid);
         if (user.amount > 0) {
             uint256 pending = user
-            .amount
-            .mul(pool.accKEGGPerShare)
-            .div(1e12)
-            .sub(user.rewardDebt);
+                .amount
+                .mul(pool.accKEGGPerShare)
+                .div(1e12)
+                .sub(user.rewardDebt);
             if (pending > 0) {
-                safeKEGGTransfer(msg.sender, pending);
-                harvested[msg.sender] = harvested[msg.sender].add(pending);
+                harvested[msg.sender] = harvested[msg.sender].add(
+                    safeKEGGTransfer(msg.sender, pending)
+                );
             }
         }
         if (_amount > 0) {
@@ -1530,8 +1531,9 @@ contract MasterChef is Ownable, ReentrancyGuard {
             user.rewardDebt
         );
         if (pending > 0) {
-            safeKEGGTransfer(msg.sender, pending);
-            harvested[msg.sender] = harvested[msg.sender].add(pending);
+            harvested[msg.sender] = harvested[msg.sender].add(
+                safeKEGGTransfer(msg.sender, pending)
+            );
         }
         if (_amount > 0) {
             user.amount = user.amount.sub(_amount);
@@ -1553,15 +1555,21 @@ contract MasterChef is Ownable, ReentrancyGuard {
     }
 
     // Safe KEGG transfer function, just in case if rounding error causes pool to not have enough KEGGs.
-    function safeKEGGTransfer(address _to, uint256 _amount) internal {
+    function safeKEGGTransfer(address _to, uint256 _amount)
+        internal
+        returns (uint256)
+    {
         uint256 keggBal = kegg.balanceOf(address(this));
         bool transferSuccess = false;
         if (_amount > keggBal) {
             transferSuccess = kegg.transfer(_to, keggBal);
+            require(transferSuccess, "safeKEGGTransfer: transfer failed");
+            return keggBal;
         } else {
             transferSuccess = kegg.transfer(_to, _amount);
+            require(transferSuccess, "safeKEGGTransfer: transfer failed");
+            return _amount;
         }
-        require(transferSuccess, "safeKEGGTransfer: transfer failed");
     }
 
     // Update dev address by the previous dev.
