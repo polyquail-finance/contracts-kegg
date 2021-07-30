@@ -1443,7 +1443,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
             .mul(KEGGPerBlock)
             .mul(pool.allocPoint)
             .div(totalAllocPoint);
-        kegg.mint(address(this), keggReward);
+        try kegg.mint(address(this), keggReward) {} catch {}
         try kegg.mint(devaddr, keggReward.div(10)) {} catch {}
         pool.accKEGGPerShare = pool.accKEGGPerShare.add(
             keggReward.mul(1e12).div(lpSupply)
